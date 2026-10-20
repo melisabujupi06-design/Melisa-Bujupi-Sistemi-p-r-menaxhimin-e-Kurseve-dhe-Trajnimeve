@@ -21,7 +21,7 @@ Sistemi do të ketë tri kategori kryesore të përdoruesve:
 - Administratori: Menaxhon përdoruesit, kurset, trajnerët dhe regjistrimet. 
 - Trajneri: Shikon kurset e caktuara dhe listën e pjesëmarrësve. 
 - Pjesëmarrësi: Shfleton kurset e disponueshme dhe regjistrohet në kursin që dëshiron.
-- 
+
  Funksionalitetet kryesore 
 -Sistemi do të përfshijë këto funksionalitete: 
  -Regjistrimi dhe kyçja e përdoruesve në sistem. 
