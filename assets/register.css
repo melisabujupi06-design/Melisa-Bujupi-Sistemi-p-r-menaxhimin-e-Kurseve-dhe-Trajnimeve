@@ -1,0 +1,283 @@
+
+.register-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 8%;
+    background: #fffdf9;
+    border-bottom: 1px solid #e6ddd1;
+}
+
+.register-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 27px;
+    font-weight: bold;
+    color: #604632;
+    text-decoration: none;
+}
+
+.register-logo span {
+    color: #b18a68;
+}
+
+.back-link {
+    color: #604632;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.register-container {
+    min-height: 85vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 45px 20px;
+    background: #f5f0e8;
+}
+
+.register-card {
+    width: 100%;
+    max-width: 520px;
+    background: #fffdf9;
+    border: 1px solid #e6ddd1;
+    padding: 40px;
+}
+
+.register-label {
+    color: #a17c5c;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.register-card h1 {
+    font-family: 'Playfair Display', serif;
+    color: #604632;
+    font-size: 32px;
+    margin: 10px 0;
+}
+
+.register-description {
+    color: #887b6e;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.register-group {
+    margin-bottom: 20px;
+}
+
+.register-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #30251e;
+}
+
+.register-group input,
+.register-group select {
+    width: 100%;
+    padding: 13px;
+    background: #f5f0e8;
+    border: 1px solid #e6ddd1;
+    color: #30251e;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+}
+
+.register-group small {
+    display: block;
+    color: #887b6e;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.register-button {
+    width: 100%;
+    padding: 15px;
+    background: #604632;
+    color: white;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.register-button:hover {
+    background: #30251e;
+}
+
+.register-message {
+    padding: 13px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.register-message.success {
+    background: #e8f2e7;
+    color: #315c35;
+}
+
+.register-message.error {
+    background: #f8e8e5;
+    color: #8b3025;
+}
+
+@media(max-width: 600px) {
+    .register-header {
+        padding: 20px;
+    }
+
+    .register-card {
+        padding: 25px 20px;
+    }
+
+    .register-card h1 {
+        font-size: 27px;
+    }
+}
+
+/* Student Login & Dashboard - Modern Design */
+
+.register-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background:
+        radial-gradient(circle at top left, #e9d9c6, transparent 45%),
+        #f5f0e8;
+}
+
+.register-card {
+    width: 100%;
+    max-width: 460px;
+    padding: 42px;
+    background: #fffdf9;
+    border: 1px solid #e6ddd1;
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(72, 49, 31, 0.10);
+    text-align: center;
+}
+
+.register-card h1 {
+    margin: 0 0 28px;
+    color: #604632;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 34px;
+    letter-spacing: 1px;
+}
+
+.register-card h2 {
+    margin: 0 0 12px;
+    color: #30251e;
+    font-size: 27px;
+}
+
+.register-card > p {
+    color: #85776a;
+    line-height: 1.7;
+    margin-bottom: 25px;
+}
+
+.register-card form {
+    text-align: left;
+    margin-top: 28px;
+}
+
+.register-card label {
+    display: block;
+    margin: 18px 0 8px;
+    color: #604632;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.register-card input,
+.register-card select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 15px;
+    border: 1px solid #dfd3c5;
+    border-radius: 8px;
+    background: #fff;
+    color: #30251e;
+    font: inherit;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.register-card input:focus,
+.register-card select:focus {
+    border-color: #80634b;
+    box-shadow: 0 0 0 3px rgba(128, 99, 75, 0.12);
+}
+
+.register-card button,
+.register-card form button {
+    width: 100%;
+    margin-top: 25px;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    background: #604632;
+    color: #fffdf9;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.register-card button:hover,
+.register-card form button:hover {
+    background: #30251e;
+    transform: translateY(-2px);
+}
+
+.register-card a {
+    color: #80634b;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.register-card a:hover {
+    color: #30251e;
+    text-decoration: underline;
+}
+
+.register-card div[style*="text-align:left"] {
+    border-radius: 12px;
+    background: #fff;
+    border-color: #e6ddd1 !important;
+    box-shadow: 0 5px 18px rgba(72, 49, 31, 0.05);
+}
+
+.register-card div[style*="text-align:left"] h3 {
+    color: #604632;
+    font-size: 21px;
+}
+
+.register-card div[style*="text-align:left"] p {
+    color: #716357;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .register-card {
+        padding: 28px 20px;
+    }
+
+    .register-card h1 {
+        font-size: 29px;
+    }
+
+    .register-card h2 {
+        font-size: 23px;
+    }
+}

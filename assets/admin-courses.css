@@ -1,0 +1,228 @@
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f0e8;
+            color: #30251e;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background: #604632;
+            color: #fffdf9;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 27px;
+            color: #fffdf9;
+            text-decoration: none;
+            margin-bottom: 45px;
+        }
+
+        .sidebar-logo span {
+            color: #d7b99a;
+        }
+
+        .sidebar h4 {
+            color: #d7b99a;
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .menu-link {
+            display: block;
+            color: #f5f0e8;
+            text-decoration: none;
+            padding: 13px 15px;
+            margin-bottom: 7px;
+            font-size: 14px;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            background: #80634b;
+        }
+
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid #80634b;
+            padding-top: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            padding: 40px;
+        }
+
+        .page-heading {
+            margin-bottom: 30px;
+        }
+
+        .page-heading h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: #604632;
+            margin: 0 0 8px;
+        }
+
+        .page-heading p {
+            color: #887b6e;
+            font-size: 14px;
+        }
+
+        .course-form,
+        .table-container {
+            background: #fffdf9;
+            border: 1px solid #e6ddd1;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .course-form h2,
+        .table-container h2 {
+            font-family: 'Playfair Display', serif;
+            color: #604632;
+            margin-top: 0;
+            margin-bottom: 22px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: #f5f0e8;
+            border: 1px solid #e6ddd1;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 85px;
+            resize: vertical;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .primary-btn {
+            background: #604632;
+            color: white;
+            border: none;
+            padding: 14px 22px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .primary-btn:hover {
+            background: #30251e;
+        }
+
+        .message {
+            padding: 14px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #e8f2e7;
+            color: #315c35;
+        }
+
+        .error {
+            background: #f8e8e5;
+            color: #8b3025;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e6ddd1;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f5f0e8;
+            color: #604632;
+        }
+
+        .status {
+            padding: 5px 10px;
+            background: #e8f2e7;
+            color: #315c35;
+            font-size: 12px;
+        }
+
+        .status.closed {
+            background: #f8e8e5;
+            color: #8b3025;
+        }
+
+        .delete-btn {
+            color: #a13d30;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media(max-width: 850px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .main-content {
+                padding: 25px 18px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: auto;
+            }
+        }
+    

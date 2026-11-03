@@ -1,0 +1,38 @@
+
+.enrollment-status-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 190px;
+}
+
+.enrollment-status-form select {
+    padding: 9px;
+    background: #f5f0e8;
+    border: 1px solid #e6ddd1;
+    color: #30251e;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    max-width: 125px;
+}
+
+.save-status-btn {
+    background: #604632;
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.save-status-btn:hover {
+    background: #30251e;
+}
+
+@media(max-width: 850px) {
+    .enrollment-status-form {
+        min-width: 190px;
+    }
+}

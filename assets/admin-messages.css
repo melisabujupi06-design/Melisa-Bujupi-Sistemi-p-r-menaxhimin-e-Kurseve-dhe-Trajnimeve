@@ -1,0 +1,49 @@
+
+.message-content {
+    min-width: 200px;
+    max-width: 300px;
+    white-space: normal;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.message-status {
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.message-status.read {
+    background: #e8f2e7;
+    color: #315c35;
+}
+
+.message-status.unread {
+    background: #f8e8e5;
+    color: #8b3025;
+}
+
+.read-form {
+    margin-top: 5px;
+}
+
+.read-btn {
+    background: #604632;
+    color: white;
+    border: none;
+    padding: 9px 11px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+}
+
+.read-btn:hover {
+    background: #30251e;
+}
+
+@media(max-width: 850px) {
+    .message-content {
+        min-width: 200px;
+    }
+}
