@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 require_once "config/db.php";
@@ -7,46 +8,54 @@ $success = false;
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"] ?? "");
+    $password = $_POST["password"] ?? "";
+    $confirm_password = $_POST["confirm_password"] ?? "";
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Please enter a valid email address.";
+    } elseif (strlen($password) < 8) {
+        $message = "Password must contain at least 8 characters.";
+    } elseif ($password !== $confirm_password) {
+        $message = "Passwords do not match.";
     } else {
         $stmt = $conn->prepare(
             "SELECT user_id FROM users
-             WHERE email = ? AND role = 'participant'"
+             WHERE email = ? AND role = 'participant'
+             LIMIT 1"
         );
+
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($user = $result->fetch_assoc()) {
-            $token = bin2hex(random_bytes(32));
-            $token_hash = hash("sha256", $token);
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-            $expires_at = date("Y-m-d H:i:s", time() + 1800);
+            $update = $conn->prepare(
+                "UPDATE users
+                 SET password_hash = ?
+                 WHERE user_id = ? AND role = 'participant'"
+            );
 
-            $delete = $conn->prepare(
-                "DELETE FROM password_resets WHERE user_id = ?"
+            $update->bind_param(
+                "si",
+                $password_hash,
+                $user["user_id"]
             );
-            $delete->bind_param("i", $user["user_id"]);
-            $delete->execute();
 
-            $insert = $conn->prepare(
-                "INSERT INTO password_resets
-                 (user_id, token_hash, expires_at)
-                 VALUES (?, ?, ?)"
-            );
-            $insert->bind_param(
-                "iss",
-                $user["user_id"],
-                $token_hash,
-                $expires_at
-            );
-            $insert->execute();
+            if ($update->execute() && $update->affected_rows === 1) {
+                $message = "Your password has been changed successfully!";
+                $success = true;
+            } else {
+                $message = "Could not update your password. Please try again.";
+            }
+
+            $update->close();
+        } else {
+            $message = "No student account was found with this email.";
         }
 
-        $message = "If this email belongs to an account, a password reset link has been created.";
-        $success = true;
+        $stmt->close();
     }
 }
 ?>
@@ -65,8 +74,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <div class="register-container">
     <div class="register-card">
         <h1>SkillCRAFT</h1>
-        <h2>Forgot Password?</h2>
-        <p>Enter your email address to request a password reset.</p>
+        <h2>Reset Password</h2>
+
+        <p>Enter your registered email and choose a new password.</p>
 
         <?php if ($message !== ""): ?>
             <p style="color:<?= $success ? '#47734d' : '#b3261e' ?>;">
@@ -74,7 +84,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </p>
         <?php endif; ?>
 
+        <?php if (!$success): ?>
         <form method="POST">
+
             <label>Email Address</label>
             <input
                 type="email"
@@ -83,8 +95,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 required
             >
 
-            <button type="submit">RESET PASSWORD</button>
+            <label>New Password</label>
+            <input
+                type="password"
+                name="password"
+                placeholder="Enter new password"
+                minlength="8"
+                required
+            >
+
+            <label>Confirm New Password</label>
+            <input
+                type="password"
+                name="confirm_password"
+                placeholder="Confirm new password"
+                minlength="8"
+                required
+            >
+
+            <button type="submit">UPDATE PASSWORD</button>
+
         </form>
+        <?php endif; ?>
 
         <p><a href="student_login.php">Back to Student Login</a></p>
     </div>
@@ -92,3 +124,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 </body>
 </html>
+

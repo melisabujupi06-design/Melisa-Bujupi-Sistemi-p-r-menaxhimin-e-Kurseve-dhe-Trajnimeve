@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 require_once '../config/db.php';
@@ -5,43 +6,66 @@ require_once '../config/db.php';
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
     $email = trim($_POST["email"] ?? "");
     $password = $_POST["password"] ?? "";
 
-    $stmt = $conn->prepare(
-        "SELECT admin_id, name, email, password_hash FROM admins WHERE email = ?"
-    );
+    if (!empty($email) && !empty($password)) {
 
-    if ($stmt) {
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
+        $stmt = $conn->prepare(
+            "SELECT user_id, full_name, email, password_hash
+             FROM users
+             WHERE email = ? AND role = 'admin'
+             LIMIT 1"
+        );
 
-        $result = $stmt->get_result();
+        if ($stmt) {
 
-        if ($admin = $result->fetch_assoc()) {
-            if (password_verify($password, $admin["password_hash"])) {
-                session_regenerate_id(true);
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
 
-                $_SESSION["admin_id"] = $admin["admin_id"];
-                $_SESSION["admin_name"] = $admin["name"];
+            $result = $stmt->get_result();
 
-                header("Location: dashboard.php");
-                exit;
+            if ($admin = $result->fetch_assoc()) {
+
+                if (password_verify($password, $admin["password_hash"])) {
+
+                    session_regenerate_id(true);
+
+                    $_SESSION["admin_id"] = $admin["user_id"];
+                    $_SESSION["admin_name"] = $admin["full_name"];
+                    $_SESSION["admin_email"] = $admin["email"];
+
+                    header("Location: dashboard.php");
+                    exit;
+
+                } else {
+                    $error = "Incorrect email or password.";
+                }
+
+            } else {
+                $error = "Incorrect email or password.";
             }
+
+            $stmt->close();
+
+        } else {
+            $error = "A database error occurred. Please try again.";
         }
 
-        $stmt->close();
+    } else {
+        $error = "Please enter your email and password.";
     }
-
-    $error = "Incorrect email or password.";
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Admin Login | SkillCRAFT</title>
 
     <link rel="stylesheet" href="../assets/style.css">
@@ -157,7 +181,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </a>
 
     <h1>Welcome Back</h1>
-    <p class="login-description">Sign in to your administrator account.</p>
+
+    <p class="login-description">
+        Sign in to your administrator account.
+    </p>
 
     <?php if ($error !== ""): ?>
         <div class="login-error">
@@ -168,15 +195,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <form method="POST" action="login.php">
 
         <label for="email">Email Address</label>
+
         <input
             type="email"
             id="email"
             name="email"
             placeholder="Enter your email"
+            value="<?= htmlspecialchars($_POST["email"] ?? "") ?>"
             required
         >
 
         <label for="password">Password</label>
+
         <input
             type="password"
             id="password"
@@ -189,7 +219,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     </form>
 
-    <a href="../index.php" class="back-home">← Back to Home</a>
+    <a href="../index.php" class="back-home">
+        ← Back to Home
+    </a>
 
 </div>
 

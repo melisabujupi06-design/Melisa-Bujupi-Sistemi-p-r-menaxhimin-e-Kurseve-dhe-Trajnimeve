@@ -1,12 +1,14 @@
 
 <?php
+session_start();
 require_once 'config/db.php';
 
 $success = "";
 $error = "";
 
-// Merr kurset aktive
 $selected_course_id = (int)($_GET["course_id"] ?? 0);
+
+// Merr kurset aktive
 $courses = $conn->query("
     SELECT course_id, title, price
     FROM courses
@@ -21,58 +23,74 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST["password"] ?? "";
     $course_id = (int)($_POST["course_id"] ?? 0);
 
-    if ($name === "" || !filter_var($email, FILTER_VALIDATE_EMAIL)
-        || strlen($password) < 8 || $course_id <= 0) {
-
+    if (
+        $name === "" ||
+        !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+        strlen($password) < 8 ||
+        $course_id <= 0
+    ) {
         $error = "Please complete all fields correctly. Password must contain at least 8 characters.";
 
     } else {
 
-        // Kontrollo nëse kursi ekziston dhe është i hapur
-        $courseStmt = $conn->prepare("
-            SELECT course_id FROM courses
-            WHERE course_id = ? AND status = 'open'
-        ");
-        $courseStmt->bind_param("i", $course_id);
-        $courseStmt->execute();
-        $courseResult = $courseStmt->get_result();
+        try {
+            $conn->begin_transaction();
 
-        if ($courseResult->num_rows === 0) {
+            // Kontrollo nëse kursi ekziston dhe është i hapur
+            $courseStmt = $conn->prepare("
+                SELECT course_id
+                FROM courses
+                WHERE course_id = ? AND status = 'open'
+                LIMIT 1
+            ");
 
-            $error = "The selected course is not available.";
+            $courseStmt->bind_param("i", $course_id);
+            $courseStmt->execute();
 
-        } else {
+            $courseResult = $courseStmt->get_result();
 
-            // Kontrollo nëse studenti ekziston
+            if ($courseResult->num_rows === 0) {
+                throw new Exception("The selected course is not available.");
+            }
+
+            $courseStmt->close();
+
+            // Kontrollo nëse llogaria ekziston
             $userStmt = $conn->prepare("
-                SELECT user_id, password_hash, role
+                SELECT user_id, full_name, password_hash, role
                 FROM users
                 WHERE email = ?
+                LIMIT 1
             ");
+
             $userStmt->bind_param("s", $email);
             $userStmt->execute();
+
             $userResult = $userStmt->get_result();
 
-            if ($userResult->num_rows > 0) {
+            if ($user = $userResult->fetch_assoc()) {
 
-                $user = $userResult->fetch_assoc();
-
-                if ($user["role"] !== "participant" ||
-                    !password_verify($password, $user["password_hash"])) {
-
-                    $error = "Email or password is incorrect.";
-
-                } else {
-                    $user_id = (int)$user["user_id"];
+                if (
+                    $user["role"] !== "participant" ||
+                    !password_verify($password, $user["password_hash"])
+                ) {
+                    throw new Exception("Email or password is incorrect.");
                 }
+
+                $user_id = (int)$user["user_id"];
+                $student_name = $user["full_name"];
 
             } else {
 
                 // Krijo llogari të re
-                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                $password_hash = password_hash(
+                    $password,
+                    PASSWORD_DEFAULT
+                );
 
                 $insertUser = $conn->prepare("
-                    INSERT INTO users (full_name, email, password_hash, role)
+                    INSERT INTO users
+                    (full_name, email, password_hash, role)
                     VALUES (?, ?, ?, 'participant')
                 ");
 
@@ -83,57 +101,81 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $password_hash
                 );
 
-                if ($insertUser->execute()) {
-                    $user_id = $conn->insert_id;
-                } else {
-                    $error = "Could not create your account.";
-                }
+                $insertUser->execute();
+
+                $user_id = (int)$conn->insert_id;
+                $student_name = $name;
 
                 $insertUser->close();
             }
 
             $userStmt->close();
 
+            // Kontrollo regjistrimin e dyfishtë
+            $checkEnrollment = $conn->prepare("
+                SELECT enrollment_id
+                FROM enrollments
+                WHERE user_id = ? AND course_id = ?
+                LIMIT 1
+            ");
+
+            $checkEnrollment->bind_param(
+                "ii",
+                $user_id,
+                $course_id
+            );
+
+            $checkEnrollment->execute();
+
+            $existingEnrollment = $checkEnrollment->get_result();
+
+            if ($existingEnrollment->num_rows > 0) {
+                throw new Exception(
+                    "You are already registered for this course."
+                );
+            }
+
+            $checkEnrollment->close();
+
             // Regjistro studentin në kurs
-            if ($error === "" && isset($user_id)) {
+            $enrollStmt = $conn->prepare("
+                INSERT INTO enrollments
+                (user_id, course_id, status)
+                VALUES (?, ?, 'registered')
+            ");
 
-                $checkEnrollment = $conn->prepare("
-                    SELECT enrollment_id
-                    FROM enrollments
-                    WHERE user_id = ? AND course_id = ?
-                ");
+            $enrollStmt->bind_param(
+                "ii",
+                $user_id,
+                $course_id
+            );
 
-                $checkEnrollment->bind_param("ii", $user_id, $course_id);
-                $checkEnrollment->execute();
-                $existingEnrollment = $checkEnrollment->get_result();
+            $enrollStmt->execute();
+            $enrollStmt->close();
 
-                if ($existingEnrollment->num_rows > 0) {
+            // Ruaj ndryshimet në databazë
+            $conn->commit();
 
-                    $error = "You are already registered for this course.";
+            // Kyç automatikisht studentin
+            session_regenerate_id(true);
 
-                } else {
+            $_SESSION["student_id"] = $user_id;
+            $_SESSION["student_name"] = $student_name;
 
-                    $enrollStmt = $conn->prepare("
-                        INSERT INTO enrollments (user_id, course_id, status)
-                        VALUES (?, ?, 'registered')
-                    ");
+            // Dërgo studentin te dashboard
+            header("Location: student_dashboard.php");
+            exit;
 
-                    $enrollStmt->bind_param("ii", $user_id, $course_id);
+        } catch (Throwable $e) {
 
-                    if ($enrollStmt->execute()) {
-                        $success = "Registration completed successfully!";
-                    } else {
-                        $error = "Registration failed. Please try again.";
-                    }
+            $conn->rollback();
 
-                    $enrollStmt->close();
-                }
-
-                $checkEnrollment->close();
+            if ($e instanceof mysqli_sql_exception) {
+                $error = "Registration could not be completed. Please try again.";
+            } else {
+                $error = $e->getMessage();
             }
         }
-
-        $courseStmt->close();
     }
 }
 ?>
@@ -216,21 +258,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <div class="register-group">
                 <label for="course_id">Select Course</label>
+
                 <select id="course_id" name="course_id" required>
                     <option value="">Choose a course</option>
 
                     <?php if ($courses): ?>
                         <?php while ($course = $courses->fetch_assoc()): ?>
+
                             <option
                                 value="<?= (int)$course["course_id"] ?>"
-                               <?= (
-    (isset($_POST["course_id"]) && (int)$_POST["course_id"] === (int)$course["course_id"])
-    || (!isset($_POST["course_id"]) && $selected_course_id === (int)$course["course_id"])
-) ? "selected" : "" ?>
+                                <?= (
+                                    (isset($_POST["course_id"]) &&
+                                    (int)$_POST["course_id"] === (int)$course["course_id"])
+                                    ||
+                                    (!isset($_POST["course_id"]) &&
+                                    $selected_course_id === (int)$course["course_id"])
+                                ) ? "selected" : "" ?>
                             >
                                 <?= htmlspecialchars($course["title"]) ?>
                                 - €<?= number_format((float)$course["price"], 2) ?>
                             </option>
+
                         <?php endwhile; ?>
                     <?php endif; ?>
 

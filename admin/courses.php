@@ -12,7 +12,10 @@ require_once '../config/db.php';
 $error = "";
 $success = "";
 
+// =====================================
 // ADD COURSE
+// =====================================
+
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_course"])) {
 
     $category_id = (int)($_POST["category_id"] ?? 0);
@@ -25,96 +28,155 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["add_course"])) {
     $capacity = (int)($_POST["capacity"] ?? 0);
     $status = $_POST["status"] ?? "open";
 
+    $allowedStatuses = ["planned", "open", "completed", "cancelled"];
+
     if (
-        $category_id <= 0 || $trainer_id <= 0 ||
-        $title === "" || $description === "" ||
-        $start_date === "" || $end_date === "" ||
-        $price < 0 || $capacity <= 0 ||
-        !in_array($status, ["open", "closed"], true)
+        $category_id <= 0 ||
+        $trainer_id <= 0 ||
+        $title === "" ||
+        $description === "" ||
+        $start_date === "" ||
+        $end_date === "" ||
+        $price < 0 ||
+        $capacity <= 0 ||
+        !in_array($status, $allowedStatuses, true)
     ) {
         $error = "Please complete all fields correctly.";
+
     } elseif ($end_date < $start_date) {
+
         $error = "End date cannot be before start date.";
+
     } else {
+
         $stmt = $conn->prepare("
             INSERT INTO courses
-            (category_id, trainer_id, title, description,
-             start_date, end_date, price, capacity, status)
+            (
+                category_id,
+                trainer_id,
+                title,
+                description,
+                start_date,
+                end_date,
+                price,
+                capacity,
+                status
+            )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
-        $stmt->bind_param(
-            "iissssdis",
-            $category_id,
-            $trainer_id,
-            $title,
-            $description,
-            $start_date,
-            $end_date,
-            $price,
-            $capacity,
-            $status
-        );
+        if ($stmt) {
 
-        if ($stmt->execute()) {
-            $success = "Course added successfully!";
+            $stmt->bind_param(
+                "iissssdis",
+                $category_id,
+                $trainer_id,
+                $title,
+                $description,
+                $start_date,
+                $end_date,
+                $price,
+                $capacity,
+                $status
+            );
+
+            if ($stmt->execute()) {
+                $success = "Course added successfully!";
+            } else {
+                $error = "Could not add course. Check the selected category and trainer.";
+            }
+
+            $stmt->close();
+
         } else {
-            $error = "Could not add course. Check the selected category and trainer.";
+            $error = "Database error. Could not prepare the course.";
         }
-
-        $stmt->close();
     }
 }
 
+// =====================================
 // DELETE COURSE
+// =====================================
+
 if (isset($_GET["delete"])) {
+
     $course_id = (int)$_GET["delete"];
 
-    $stmt = $conn->prepare("DELETE FROM courses WHERE course_id = ?");
-    $stmt->bind_param("i", $course_id);
+    if ($course_id > 0) {
 
-    if ($stmt->execute() && $stmt->affected_rows > 0) {
-        $success = "Course deleted successfully!";
-    } else {
-        $error = "Course could not be deleted. It may be connected to other records.";
+        $stmt = $conn->prepare(
+            "DELETE FROM courses WHERE course_id = ?"
+        );
+
+        if ($stmt) {
+
+            $stmt->bind_param("i", $course_id);
+
+            if ($stmt->execute() && $stmt->affected_rows > 0) {
+                $success = "Course deleted successfully!";
+            } else {
+                $error = "Course could not be deleted. It may not exist.";
+            }
+
+            $stmt->close();
+
+        } else {
+            $error = "Database error. Could not delete the course.";
+        }
     }
-
-    $stmt->close();
 }
 
+// =====================================
 // LOAD COURSES
+// =====================================
+
 $courses = $conn->query("
-    SELECT course_id, title, description, start_date,
-           end_date, price, capacity, status
+    SELECT
+        course_id,
+        title,
+        description,
+        start_date,
+        end_date,
+        price,
+        capacity,
+        status
     FROM courses
     ORDER BY course_id DESC
 ");
 
+// =====================================
 // LOAD CATEGORIES
+// =====================================
+
 $categories = $conn->query("
     SELECT category_id, category_name
     FROM categories
     ORDER BY category_name
 ");
 
+// =====================================
 // LOAD TRAINERS
+// =====================================
+
 $trainers = $conn->query("
     SELECT trainer_id, full_name
     FROM trainers
     ORDER BY full_name
 ");
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Manage Courses | SkillCRAFT</title>
 
     <link rel="stylesheet" href="../assets/style.css">
-<link rel="stylesheet" href="../assets/admin-courses.css">
-
+    <link rel="stylesheet" href="../assets/admin-courses.css">
 </head>
 
 <body>
@@ -122,6 +184,7 @@ $trainers = $conn->query("
 <div class="admin-layout">
 
     <aside class="sidebar">
+
         <a href="../index.php" class="sidebar-logo">
             Skill<span>CRAFT.</span>
         </a>
@@ -136,6 +199,7 @@ $trainers = $conn->query("
         <div class="logout-link">
             <a href="logout.php" class="menu-link">Log Out</a>
         </div>
+
     </aside>
 
     <main class="main-content">
@@ -167,72 +231,120 @@ $trainers = $conn->query("
 
                     <div class="form-group">
                         <label>Course Title</label>
-                        <input type="text" name="title" required>
+                        <input
+                            type="text"
+                            name="title"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label>Category</label>
+
                         <select name="category_id" required>
                             <option value="">Select category</option>
+
                             <?php if ($categories): ?>
                                 <?php while ($cat = $categories->fetch_assoc()): ?>
-                                    <option value="<?= $cat["category_id"] ?>">
+
+                                    <option value="<?= (int)$cat["category_id"] ?>">
                                         <?= htmlspecialchars($cat["category_name"]) ?>
                                     </option>
+
                                 <?php endwhile; ?>
                             <?php endif; ?>
+
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Trainer</label>
+
                         <select name="trainer_id" required>
                             <option value="">Select trainer</option>
+
                             <?php if ($trainers): ?>
                                 <?php while ($trainer = $trainers->fetch_assoc()): ?>
-                                    <option value="<?= $trainer["trainer_id"] ?>">
+
+                                    <option value="<?= (int)$trainer["trainer_id"] ?>">
                                         <?= htmlspecialchars($trainer["full_name"]) ?>
                                     </option>
+
                                 <?php endwhile; ?>
                             <?php endif; ?>
+
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Price (€)</label>
-                        <input type="number" name="price" min="0" step="0.01" required>
+
+                        <input
+                            type="number"
+                            name="price"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label>Start Date</label>
-                        <input type="date" name="start_date" required>
+
+                        <input
+                            type="date"
+                            name="start_date"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label>End Date</label>
-                        <input type="date" name="end_date" required>
+
+                        <input
+                            type="date"
+                            name="end_date"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label>Capacity</label>
-                        <input type="number" name="capacity" min="1" required>
+
+                        <input
+                            type="number"
+                            name="capacity"
+                            min="1"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label>Status</label>
+
                         <select name="status" required>
-                            <option value="open">Open</option>
-                            <option value="closed">Closed</option>
+                            <option value="planned">Planned</option>
+                            <option value="open" selected>Open</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
                         </select>
                     </div>
 
                     <div class="form-group full-width">
                         <label>Description</label>
-                        <textarea name="description" required></textarea>
+
+                        <textarea
+                            name="description"
+                            required
+                        ></textarea>
                     </div>
 
                     <div class="form-group full-width">
-                        <button type="submit" name="add_course" class="primary-btn">
+                        <button
+                            type="submit"
+                            name="add_course"
+                            class="primary-btn"
+                        >
                             ADD COURSE
                         </button>
                     </div>
@@ -250,6 +362,7 @@ $trainers = $conn->query("
             <div class="table-scroll">
 
                 <table>
+
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -264,39 +377,69 @@ $trainers = $conn->query("
                     </thead>
 
                     <tbody>
+
                         <?php if ($courses && $courses->num_rows > 0): ?>
 
                             <?php while ($course = $courses->fetch_assoc()): ?>
+
                                 <tr>
-                                    <td><?= $course["course_id"] ?></td>
+
                                     <td>
-                                        <strong><?= htmlspecialchars($course["title"]) ?></strong><br>
+                                        <?= (int)$course["course_id"] ?>
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            <?= htmlspecialchars($course["title"]) ?>
+                                        </strong>
+                                        <br>
                                         <?= htmlspecialchars($course["description"]) ?>
                                     </td>
-                                    <td><?= htmlspecialchars($course["start_date"]) ?></td>
-                                    <td><?= htmlspecialchars($course["end_date"]) ?></td>
-                                    <td>€<?= number_format((float)$course["price"], 2) ?></td>
-                                    <td><?= $course["capacity"] ?></td>
+
                                     <td>
-                                        <span class="status <?= $course["status"] === "closed" ? "closed" : "" ?>">
+                                        <?= htmlspecialchars($course["start_date"]) ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars($course["end_date"]) ?>
+                                    </td>
+
+                                    <td>
+                                        €<?= number_format((float)$course["price"], 2) ?>
+                                    </td>
+
+                                    <td>
+                                        <?= (int)$course["capacity"] ?>
+                                    </td>
+
+                                    <td>
+                                        <span class="status">
                                             <?= htmlspecialchars(ucfirst($course["status"])) ?>
                                         </span>
                                     </td>
+
                                     <td>
                                         <a
                                             class="delete-btn"
-                                            href="courses.php?delete=<?= $course["course_id"] ?>"
+                                            href="courses.php?delete=<?= (int)$course["course_id"] ?>"
                                             onclick="return confirm('Are you sure you want to delete this course?');"
-                                        >Delete</a>
+                                        >
+                                            Delete
+                                        </a>
                                     </td>
+
                                 </tr>
+
                             <?php endwhile; ?>
 
                         <?php else: ?>
+
                             <tr>
                                 <td colspan="8">No courses found.</td>
                             </tr>
+
                         <?php endif; ?>
+
                     </tbody>
 
                 </table>
